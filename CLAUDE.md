@@ -236,3 +236,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- Python 3.13+ (per constitution Phase I requirements) (001-console-todo-crud)
+- In-Memory Dict (simplest solution for Phase I, no persistence) (001-console-todo-crud)
+
+## Recent Changes
+- 001-console-todo-crud: Added Python 3.13+ (per constitution Phase I requirements)

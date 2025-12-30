@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +16,7 @@ import { TaskItem } from "@/components/tasks/task-item";
 import type { Task } from "@/types";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
   const {
     tasks,
@@ -44,6 +46,13 @@ export default function DashboardPage() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  // Redirection when not logged in
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   // Load data on mount
   useEffect(() => {

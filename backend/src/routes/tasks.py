@@ -94,8 +94,13 @@ async def get_tasks(
         count_query = count_query.where(Task.completed == completed)
 
     if priority is not None:
-        query = query.where(Task.priority == priority)
-        count_query = count_query.where(Task.priority == priority)
+        if "," in priority:
+            priorities = [p.strip().upper() for p in priority.split(",")]
+            query = query.where(Task.priority.in_(priorities))
+            count_query = count_query.where(Task.priority.in_(priorities))
+        else:
+            query = query.where(Task.priority == priority.upper())
+            count_query = count_query.where(Task.priority == priority.upper())
 
     if tag_id is not None:
         query = query.join(TaskTag).where(TaskTag.tag_id == tag_id)

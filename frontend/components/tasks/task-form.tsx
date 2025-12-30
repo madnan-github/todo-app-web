@@ -89,7 +89,6 @@ export function TaskForm({ onSubmit, isLoading = false, initialData }: TaskFormP
       <div className="flex items-center gap-4">
         <div className="flex-1">
           <Select
-            label="Priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value as "high" | "medium" | "low")}
             options={[

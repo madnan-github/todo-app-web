@@ -189,6 +189,17 @@ export interface Task {
   tags: Tag[];
 }
 
+export type TaskCreateInput = {
+  title: string;
+  description?: string;
+  priority: "high" | "medium" | "low";
+  tag_ids?: number[];
+};
+
+export type TaskUpdateInput = Partial<TaskCreateInput> & {
+  completed?: boolean;
+};
+
 export interface Tag {
   id: number;
   user_id: string;

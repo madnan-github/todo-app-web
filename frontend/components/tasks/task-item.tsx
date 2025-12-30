@@ -136,7 +136,7 @@ export const TaskItem = memo(function TaskItem({
 
 interface TaskItemProps {
   task: Task;
-  onToggleComplete: (taskId: number) => Promise<void>;
-  onDelete: (taskId: number) => Promise<void>;
+  onToggleComplete: (taskId: number) => Promise<any>;
+  onDelete: (taskId: number) => Promise<any>;
   onEdit: (task: Task) => void;
 }

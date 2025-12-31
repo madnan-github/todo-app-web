@@ -289,6 +289,8 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
 
 ## Active Technologies
+- Python 3.13+ (existing `.python-version`) + FastAPI 0.115+, SQLModel 0.0.22, asyncpg 0.30+, uvicorn 0.30+ (004-backend-deployment)
+- Neon PostgreSQL (serverless, asyncpg driver) (004-backend-deployment)
 
 ### Phase I (Console App) - Completed
 - Python 3.13+

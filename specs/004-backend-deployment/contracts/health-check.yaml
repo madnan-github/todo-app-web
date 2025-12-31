@@ -1,0 +1,88 @@
+openapi: 3.1.0
+info:
+  title: TaskFlow Health Check API
+  version: 1.0.0
+  description: Production health check endpoint specification for Railway deployment
+
+paths:
+  /health:
+    get:
+      summary: Deep Health Check
+      description: |
+        Verifies system health including database connectivity.
+        This endpoint is always accessible (no auth required) and performs
+        a real database query to confirm connectivity.
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: System is healthy and database is connected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                database: connected
+                environment: production
+                timestamp: '2025-12-31T12:00:00Z'
+        '503':
+          description: System is unhealthy or database is disconnected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnhealthyResponse'
+              example:
+                status: unhealthy
+                database: disconnected
+                environment: production
+                timestamp: '2025-12-31T12:00:00Z'
+                error: 'Database connection failed: connection refused'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok]
+          description: Overall system status
+        database:
+          type: string
+          enum: [connected]
+          description: Database connection status
+        environment:
+          type: string
+          enum: [production, development]
+          description: Deployment environment
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of the health check
+
+    UnhealthyResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [unhealthy]
+          description: Overall system status
+        database:
+          type: string
+          enum: [disconnected]
+          description: Database connection status
+        environment:
+          type: string
+          enum: [production, development]
+          description: Deployment environment
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of the health check
+        error:
+          type: string
+          description: Detailed error message
+
+  securitySchemes: []

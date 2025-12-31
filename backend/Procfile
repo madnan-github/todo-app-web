@@ -1,0 +1,4 @@
+# Railway Procfile for TaskFlow Backend
+# Reference: https://docs.railway.com/guides/deployments/procfile
+
+web: uvicorn src.main:app --host 0.0.0.0 --port $PORT --workers 1

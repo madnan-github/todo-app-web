@@ -47,12 +47,16 @@ pycparser==2.23
 pydantic==2.12.5
     # via
     #   fastapi
+    #   pydantic-settings
     #   sqlmodel
 pydantic-core==2.41.5
     # via pydantic
+pydantic-settings==2.12.0
+    # via backend (pyproject.toml)
 python-dotenv==1.2.1
     # via
     #   backend (pyproject.toml)
+    #   pydantic-settings
     #   uvicorn
 python-jose==3.5.0
     # via backend (pyproject.toml)
@@ -76,7 +80,9 @@ typing-extensions==4.15.0
     #   sqlalchemy
     #   typing-inspection
 typing-inspection==0.4.2
-    # via pydantic
+    # via
+    #   pydantic
+    #   pydantic-settings
 uvicorn==0.40.0
     # via backend (pyproject.toml)
 uvloop==0.22.1

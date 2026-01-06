@@ -17,14 +17,23 @@ from src.middleware import rate_limiter
 async def lifespan(app: FastAPI):
     """Application lifespan events."""
     # Startup: Initialize database tables
+    print(f"Starting TaskFlow API in {settings.environment} mode")
+    print(f"Database URL: {settings.database_url[:50]}...")
+    print(f"CORS Origins: {settings.cors_origins}")
+
     try:
         await init_db()
-        print("Database initialized successfully")
+        print("✓ Database initialized successfully")
     except Exception as e:
-        print(f"Warning: Database initialization failed: {e}")
-        print("Server will start but database operations will fail")
+        print(f"✗ Warning: Database initialization failed: {e}")
+        print("Server will start but database operations may fail")
+        import traceback
+        traceback.print_exc()
+
+    print("✓ Server startup complete")
     yield
     # Shutdown: Cleanup if needed
+    print("Shutting down server...")
 
 
 # Create FastAPI application

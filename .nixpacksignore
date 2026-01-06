@@ -1,7 +1,0 @@
-# Nixpacks ignore file for Railway deployment
-# Ignore root pyproject.toml from Phase I (console app)
-# We only want to use backend/pyproject.toml
-
-pyproject.toml
-src/
-tests/

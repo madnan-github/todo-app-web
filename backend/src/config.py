@@ -3,6 +3,7 @@ from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 import os
+import sys
 
 
 class ValidationError(Exception):
@@ -41,9 +42,12 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".env",
+        env_file_encoding="utf-8",
         env_prefix="",
         case_sensitive=False,
-        extra="ignore"
+        extra="ignore",
+        # Environment variables take precedence over .env file
+        # This ensures Railway's injected vars override any local .env
     )
 
     def is_production(self) -> bool:
@@ -101,7 +105,20 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     """Get cached settings instance."""
-    return Settings()
+    # DEBUG: Print environment variables before loading settings
+    print("[CONFIG] ===== PYDANTIC SETTINGS DEBUG =====", file=sys.stderr, flush=True)
+    print(f"[CONFIG] DATABASE_URL from os.environ: {os.environ.get('DATABASE_URL', 'NOT SET')[:60] if os.environ.get('DATABASE_URL') else 'NOT SET'}...", file=sys.stderr, flush=True)
+    print(f"[CONFIG] ENVIRONMENT from os.environ: {os.environ.get('ENVIRONMENT', 'NOT SET')}", file=sys.stderr, flush=True)
+    print(f"[CONFIG] All env keys with 'DATABASE': {[k for k in os.environ.keys() if 'DATABASE' in k.upper()]}", file=sys.stderr, flush=True)
+    print("[CONFIG] =======================================", file=sys.stderr, flush=True)
+
+    settings = Settings()
+
+    print(f"[CONFIG] After loading - database_url: {settings.database_url[:60]}...", file=sys.stderr, flush=True)
+    print(f"[CONFIG] After loading - environment: {settings.environment}", file=sys.stderr, flush=True)
+    print("[CONFIG] =======================================", file=sys.stderr, flush=True)
+
+    return settings
 
 
 def validate_settings() -> Settings:

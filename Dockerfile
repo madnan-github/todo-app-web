@@ -21,4 +21,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Railway sets PORT environment variable dynamically
 # Use startup script to handle PORT properly
+ENTRYPOINT ["/bin/bash"]
 CMD ["/app/start.sh"]

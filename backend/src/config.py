@@ -40,6 +40,35 @@ class Settings(BaseSettings):
     # This MUST be set via environment variables in production
     better_auth_secret: str = ""
 
+    def __init__(self, **kwargs):
+        """Initialize settings with Railway workaround for leading space bug."""
+        # Railway bug: Sometimes adds leading space to env var names
+        # Check for ' DATABASE_URL' (with space) if DATABASE_URL not found
+        if "database_url" not in kwargs and "DATABASE_URL" not in os.environ:
+            spaced_value = os.environ.get(" DATABASE_URL")
+            if spaced_value:
+                kwargs["database_url"] = spaced_value
+                print(f"[CONFIG] ⚠️  WARNING: Found Railway env var with leading space: ' DATABASE_URL'", file=sys.stderr, flush=True)
+                print(f"[CONFIG] ✓ Applied workaround, using value: {spaced_value[:60]}...", file=sys.stderr, flush=True)
+
+        # Same for other critical vars if needed
+        if "jwt_secret_key" not in kwargs and "JWT_SECRET_KEY" not in os.environ:
+            spaced_value = os.environ.get(" JWT_SECRET_KEY")
+            if spaced_value:
+                kwargs["jwt_secret_key"] = spaced_value
+
+        if "better_auth_secret" not in kwargs and "BETTER_AUTH_SECRET" not in os.environ:
+            spaced_value = os.environ.get(" BETTER_AUTH_SECRET")
+            if spaced_value:
+                kwargs["better_auth_secret"] = spaced_value
+
+        if "cors_origins" not in kwargs and "CORS_ORIGINS" not in os.environ:
+            spaced_value = os.environ.get(" CORS_ORIGINS")
+            if spaced_value:
+                kwargs["cors_origins"] = spaced_value
+
+        super().__init__(**kwargs)
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

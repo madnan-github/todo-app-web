@@ -50,17 +50,17 @@ export default function DashboardPage() {
   // Redirection when not logged in
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push("/");
+      router.push("/signin");
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Load data on mount
+  // Load data on mount - only after auth loading is complete
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       fetchTasks();
       fetchTags();
     }
-  }, [isAuthenticated, fetchTasks, fetchTags]);
+  }, [authLoading, isAuthenticated, fetchTasks, fetchTags]);
 
   // Refetch when filters change (T139, T153)
   const handleFilterChange = useCallback(() => {

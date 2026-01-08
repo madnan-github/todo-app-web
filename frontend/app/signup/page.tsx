@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import type { SignUpFormData } from "@/types";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { signUp, isLoading, error } = useAuth();
+  const { signUp, isAuthenticated, isLoading: authLoading, error } = useAuth();
   const [formData, setFormData] = useState<SignUpFormData>({
     email: "",
     password: "",
@@ -19,6 +19,14 @@ export default function SignUpPage() {
     name: "",
   });
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Redirect to homepage if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push("/");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,9 +48,11 @@ export default function SignUpPage() {
     }
 
     try {
+      setIsSubmitting(true);
       await signUp(formData);
-      router.push("/dashboard");
+      // Don't manually redirect - useEffect will handle it when isAuthenticated becomes true
     } catch (err: any) {
+      setIsSubmitting(false);
       // Error is handled by useAuth hook
     }
   };
@@ -87,7 +97,7 @@ export default function SignUpPage() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                disabled={isLoading}
+                disabled={authLoading || isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -102,7 +112,7 @@ export default function SignUpPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                disabled={isLoading}
+                disabled={authLoading || isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -117,7 +127,7 @@ export default function SignUpPage() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                disabled={isLoading}
+                disabled={authLoading || isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -132,13 +142,13 @@ export default function SignUpPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
-                disabled={isLoading}
+                disabled={authLoading || isSubmitting}
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Create Account"}
+            <Button type="submit" className="w-full" disabled={authLoading || isSubmitting}>
+              {(authLoading || isSubmitting) ? "Creating account..." : "Create Account"}
             </Button>
             <p className="text-center text-sm text-gray-600 dark:text-gray-400">
               Already have an account?{" "}

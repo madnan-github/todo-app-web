@@ -47,10 +47,10 @@ export default function DashboardPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  // Redirection when not logged in
+  // Redirection when not logged in (e.g., after signout)
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push("/signin");
+      router.push("/");
     }
   }, [authLoading, isAuthenticated, router]);
 
@@ -86,11 +86,14 @@ export default function DashboardPage() {
     fetchTasks(params);
   }, [status, priorities, selectedTagIds, search, sortBy, sortOrder, fetchTasks]);
 
-  // Trigger filter change when any filter updates
+  // Trigger filter change when any filter updates (only when authenticated)
   useEffect(() => {
+    // Only fetch if authenticated and auth is not loading
     if (!authLoading && isAuthenticated) {
       handleFilterChange();
     }
+    // Explicitly avoid calling handleFilterChange when user signs out
+    // (isAuthenticated becomes false) to prevent 401 errors
   }, [status, priorities, selectedTagIds, search, sortBy, sortOrder, authLoading, isAuthenticated, handleFilterChange]);
 
   // Task CRUD handlers

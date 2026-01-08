@@ -27,6 +27,11 @@ export function useTasks() {
         setTasks(response.tasks);
         return response;
       } catch (err: any) {
+        // Silently handle 401 (authentication) errors - user is not logged in
+        if (err.statusCode === 401) {
+          setTasks([]);
+          return { tasks: [], total: 0, page: 1, per_page: 20 };
+        }
         setError(err.message || "Failed to fetch tasks");
         throw err;
       } finally {

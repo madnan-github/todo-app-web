@@ -17,6 +17,11 @@ export function useTags() {
         setTags(response.tags);
         return response;
       } catch (err: any) {
+        // Silently handle 401 (authentication) errors - user is not logged in
+        if (err.statusCode === 401) {
+          setTags([]);
+          return { tags: [], total: 0, page: 1, per_page: 100 };
+        }
         setError(err.message || "Failed to fetch tags");
         throw err;
       } finally {

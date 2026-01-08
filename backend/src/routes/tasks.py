@@ -152,6 +152,15 @@ async def create_task(
     session: AsyncSession = Depends(get_session),
 ):
     """Create a new task with optional tag associations."""
+    # Verify user exists before creating task
+    from src.models import User
+    user_check = await session.execute(select(User).where(User.id == user_id))
+    if not user_check.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid session: User does not exist. Please sign out and sign in again.",
+        )
+
     # Create task
     task = Task(
         user_id=user_id,
@@ -160,7 +169,16 @@ async def create_task(
         priority=task_data.priority,
     )
     session.add(task)
-    await session.flush()  # Get the task ID
+    try:
+        await session.flush()  # Get the task ID
+    except Exception as e:
+        await session.rollback()
+        if "foreign key constraint" in str(e).lower():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid session: User account not found. Please sign out and sign in again.",
+            )
+        raise
 
     # Add tags if provided (T120, T121: tag creation/upsert and junction creation)
     if task_data.tag_ids:

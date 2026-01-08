@@ -35,7 +35,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: session, isPending, error: authError } = authClient.useSession();
 
   useEffect(() => {
+    // Set a timeout to prevent infinite loading state
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.warn('[useAuth] Session check timed out, setting isLoading to false');
+        setIsLoading(false);
+      }
+    }, 3000); // 3 second timeout
+
     if (!isPending) {
+      clearTimeout(timeoutId);
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -48,7 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setIsLoading(false);
     }
-  }, [session, isPending]);
+
+    return () => clearTimeout(timeoutId);
+  }, [session, isPending, isLoading]);
 
   useEffect(() => {
     if (authError) {

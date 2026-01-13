@@ -1,62 +1,45 @@
-"""
-Database connection and session management for Neon PostgreSQL.
-
-Optimized for serverless architecture with connection pooling.
-"""
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel, text
 from src.config import settings
-import os
+from urllib.parse import urlparse, parse_qs, urlencode
 
-# Neon PostgreSQL connection optimization
-# Reference: https://neon.com/docs/connect/connection-pooling
+def fix_database_url(original_url: str) -> str:
+    """Fix database URL for Neon compatibility by removing unsupported parameters."""
+    if not original_url.startswith("postgresql://"):
+        return original_url
 
-# DEBUG: Check environment variables directly
-print("[DATABASE] ===== ENVIRONMENT VARIABLE DEBUG =====", flush=True)
-print(f"[DATABASE] DATABASE_URL env var: {os.environ.get('DATABASE_URL', 'NOT SET')[:60] if os.environ.get('DATABASE_URL') else 'NOT SET'}...", flush=True)
-print(f"[DATABASE] ENVIRONMENT env var: {os.environ.get('ENVIRONMENT', 'NOT SET')}", flush=True)
-print(f"[DATABASE] PORT env var: {os.environ.get('PORT', 'NOT SET')}", flush=True)
-print(f"[DATABASE] All env vars starting with DATABASE: {[k for k in os.environ.keys() if 'DATABASE' in k.upper()]}", flush=True)
-print("[DATABASE] =========================================", flush=True)
+    # Parse the URL
+    parsed = urlparse(original_url)
 
-# Transform connection string for asyncpg if needed
-# Strip whitespace and newlines that may have been copied from Railway
-database_url = settings.database_url.strip()
-print(f"[DATABASE] Original database_url from settings: {database_url[:60]}...", flush=True)
-if database_url.startswith("postgresql://"):
-    database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    print(f"[DATABASE] Transformed to asyncpg: {database_url[:60]}...", flush=True)
-elif "sqlite" in database_url.lower():
-    print("[DATABASE] WARNING: Using SQLite (development mode)", flush=True)
+    # Parse query parameters
+    query_params = parse_qs(parsed.query)
 
-# Determine if we should use connection pooling
-# In production (Neon), use optimized pool settings
-# In development (SQLite), use minimal settings
-is_production = settings.is_production() and "neon" in database_url.lower()
+    # Remove problematic parameters that asyncpg doesn't support
+    params_to_remove = ['channel_binding', 'sslmode']
+    for param in params_to_remove:
+        query_params.pop(param, None)
 
-if is_production:
-    # Production: Optimized for Neon serverless
-    # - pool_size: 10 connections (recommended for serverless)
-    # - max_overflow: 2 (burst capacity for spikes)
-    # - pool_pre_ping: Verify connection before use
-    # - pool_recycle: Recycle connections hourly to avoid stale connections
-    engine = create_async_engine(
-        database_url,
-        echo=settings.environment == "development",
-        future=True,
-        pool_size=10,           # Neon recommended for serverless
-        max_overflow=2,         # Burst capacity
-        pool_pre_ping=True,     # Verify connections
-        pool_recycle=3600,      # Recycle after 1 hour
-    )
-else:
-    # Development: Minimal pool for SQLite or local PostgreSQL
-    engine = create_async_engine(
-        database_url,
-        echo=settings.environment == "development",
-        future=True,
-    )
+    # Reconstruct the query string
+    new_query = urlencode(query_params, doseq=True)
+
+    # Reconstruct the URL with postgresql+asyncpg scheme
+    fixed_url = parsed._replace(
+        scheme='postgresql+asyncpg',
+        query=new_query
+    ).geturl()
+
+    return fixed_url
+
+# Create async engine for Neon PostgreSQL
+# Fix the URL to be compatible with asyncpg
+database_url = fix_database_url(settings.database_url)
+
+engine = create_async_engine(
+    database_url,
+    echo=settings.environment == "development",
+    future=True,
+)
 
 # Async session factory
 async_session_maker = sessionmaker(
@@ -78,18 +61,3 @@ async def get_session():
     """Dependency for getting async database sessions."""
     async with async_session_maker() as session:
         yield session
-
-
-async def verify_connection() -> bool:
-    """
-    Verify database connection is working.
-
-    Returns True if connection is healthy, False otherwise.
-    Used by /health endpoint for deep health check.
-    """
-    try:
-        async with engine.connect() as conn:
-            await conn.execute(text("SELECT 1"))
-        return True
-    except Exception:
-        return False
